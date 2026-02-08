@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.coverage
+.coverage.*
+
+# Django / Flask
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+
+# Virtual environment and environment files
+.env
+.env.*
+
+# Byte-compiled / C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+eggs/
+.eggs/
+wheels/
+
+# PyInstaller
+*.spec
+
+# Logs
+logs/
+*.log
+
+# VS Code / IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Frontend folders
+frontend/node_modules/
+mcp-sever/node_modules/
+
+# Build caches
+/.parcel-cache
+build/
+dist/
+
+# Uploaded files (do not commit user uploads)
+backend/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Other
+*.pyc
+*.pyo
+*.pyd
+
