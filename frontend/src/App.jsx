@@ -41,7 +41,7 @@ export default function App() {
         if (!Conv || !Conv.startSession) throw new Error("Conversation.startSession not found in @elevenlabs/client");
 
         const convInstance = await Conv.startSession({
-          agentId: "agent_6601kgt0hb7ye8ntm0nnbdpms65x",
+          agentId: "agent_8901kh1gq7xcejz8849b8qqxg3ph",
         });
 
         conversationRef.current = convInstance;
@@ -51,8 +51,8 @@ export default function App() {
           const onTranscript = (msg) => setLogs((l) => [...l, `🗣️ ${msg.text}`]);
           const onAgentResponse = (msg) => setLogs((l) => [...l, `🤖 ${msg.text}`]);
           const onToolCall = (tool) => {
-            setLogs((l) => [...l, `🛠️ ${tool.name} called`]);
-            if (["place_order", "search_product"].includes(tool.name)) {
+            setLogs((l) => [...l, `🛠️ ${tool.name} called with ${JSON.stringify(tool.arguments || {})}`]);
+            if (["place_order", "search_products"].includes(tool.name)) {
               loadProducts();
             }
           };

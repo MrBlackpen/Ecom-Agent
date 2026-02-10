@@ -9,7 +9,7 @@ export default function VoiceAgentPanel({ logs }) {
         width: 300,
         maxHeight: 400,
         overflowY: "auto",
-        background: "#fff",
+        background: "#060000",
         border: "1px solid #ddd",
         borderRadius: 8,
         padding: 10
