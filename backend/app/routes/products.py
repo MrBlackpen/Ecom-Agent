@@ -32,6 +32,7 @@ def get_products(db: Session = Depends(get_db)):
         result.append({
             "id": p.id,
             "name": p.name,
+            "category": p.category,
             "price": p.price,
             "stock": p.stock,
             "images": [img.image_path.replace("uploads", "/uploads") for img in images],

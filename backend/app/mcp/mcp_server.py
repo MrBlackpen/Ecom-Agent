@@ -32,14 +32,14 @@ MCP_TOOLS = [
         },
     },
     {
-        "name": "place_order",
-        "title": "Place order",
-        "description": "Place an order for a product using its ID. Stock is checked and reduced.",
+        "name": "add_to_cart",
+        "title": "Add product to cart",
+        "description": "Add a product to the customer's cart using product ID and quantity. Does NOT place the order.",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "product_id": {"type": "integer", "description": "Product ID from search"},
-                "quantity": {"type": "integer", "description": "How many to order", "default": 1},
+                "quantity": {"type": "integer", "description": "How many to add", "default": 1},
             },
             "required": ["product_id"],
         },
@@ -68,6 +68,10 @@ MCP_TOOLS = [
     },
 ]
 
+# Simple in-memory buffer of recent tool calls (for local dev/debug)
+RECENT_TOOL_CALLS = []
+_RECENT_ID = 0
+
 
 def run_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
     db = SessionLocal()
@@ -86,20 +90,28 @@ def run_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
             result = [{"id": p.id, "name": p.name or "", "price": float(p.price or 0), "stock": p.stock or 0, "category": p.category or ""} for p in products]
             return {"status": "success", "result": result}
 
-        elif name == "place_order":
+        elif name == "add_to_cart":
             pid = arguments.get("product_id")
             qty = int(arguments.get("quantity", 1))
+
             product = db.query(Product).filter(Product.id == pid).first()
+
             if not product:
                 return {"status": "error", "message": "Product not found"}
+
             if product.stock < qty:
                 return {"status": "error", "message": f"Only {product.stock} left"}
-            product.stock -= qty
-            order = Order(product_id=pid, quantity=qty, status="CONFIRMED")
-            db.add(order)
-            db.commit()
-            db.refresh(order)
-            return {"status": "success", "message": f"Order placed: {qty} x {product.name}"}
+
+            return {
+                "status": "success",
+                "result": {
+                    "id": product.id,
+                    "name": product.name,
+                    "price": float(product.price),
+                    "quantity": qty
+                },
+                "message": f"{qty} × {product.name} added to cart"
+            }
 
         elif name == "ask_query":
             question = (arguments.get("question") or "").strip()
@@ -186,8 +198,19 @@ async def handle_jsonrpc(request: Request):
             return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -32602, "message": "Invalid tool name"}}
 
         result = run_tool(name, args)
+        # record recent call
+        try:
+            global _RECENT_ID
+            _RECENT_ID += 1
+            RECENT_TOOL_CALLS.append({"id": _RECENT_ID, "name": name, "arguments": args, "result": result, "message": result.get("message")})
+            # keep buffer small
+            if len(RECENT_TOOL_CALLS) > 50:
+                RECENT_TOOL_CALLS.pop(0)
+        except Exception:
+            pass
         print(f"← Tool result: {result}")
         is_error = result.get("status") == "error"
+
         text = result.get("message") or json.dumps(result.get("result", result), default=str)
 
         return {
@@ -195,6 +218,12 @@ async def handle_jsonrpc(request: Request):
             "id": msg_id,
             "result": {"content": [{"type": "text", "text": text}], "isError": is_error},
         }
+
+    elif method == "recent_tool_calls":
+        # return recent tool calls (useful for local dev polling)
+        since_id = params.get("since_id") or 0
+        entries = [e for e in RECENT_TOOL_CALLS if e["id"] > int(since_id)]
+        return {"jsonrpc": "2.0", "id": msg_id, "result": {"entries": entries}}
 
     else:
         return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -32601, "message": f"Method not found: {method}"}}

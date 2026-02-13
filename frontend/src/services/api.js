@@ -8,3 +8,16 @@ export async function fetchProducts() {
   }
   return res.json();
 }
+
+export async function placeOrder(productId, quantity) {
+  const res = await fetch(
+    `http://localhost:8000/orders/?product_id=${productId}&quantity=${quantity}`,
+    { method: "POST" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Order failed");
+  }
+
+  return res.json();
+}
